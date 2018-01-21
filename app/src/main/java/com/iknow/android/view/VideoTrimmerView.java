@@ -44,11 +44,6 @@ import iknow.android.utils.thread.UiThreadExecutor;
 
 public class VideoTrimmerView extends FrameLayout {
 
-    /**
-     * 计算公式:
-     * PixRangeMax = (视频总长 * SCREEN_WIDTH) / 视频最长的裁剪时间(15s)
-     * 视频总长/PixRangeMax = 当前视频的时间/游标当前所在位置
-     */
     private static boolean isDebugMode = false;
 
     private static final String TAG = VideoTrimmerView.class.getSimpleName();
@@ -78,7 +73,7 @@ public class VideoTrimmerView extends FrameLayout {
 
     private VideoThumbAdapter videoThumbAdapter;
     private long pixelRangeMax;
-    private int currentPixMax;  //用于处理红色进度条
+    private int currentPixMax;
     private int mScrolledOffset;
     private float leftThumbValue,rightThumbValue;
     private boolean isFromRestore = false;
@@ -156,15 +151,13 @@ public class VideoTrimmerView extends FrameLayout {
 
     private void initSeekBarPosition() {
         seekTo(mStartPosition);
-        //时间与屏幕的刻度永远保持一致
         pixelRangeMax = (mDuration * SCREEN_WIDTH) / mMaxDuration;
         mRangeSeekBarView.initThumbForRangeSeekBar(mDuration, pixelRangeMax);
 
-        //大于15秒的时候,游标处于0-15秒
         if (mDuration >= mMaxDuration) {
             mEndPosition = mMaxDuration;
             mTimeVideo = mMaxDuration;
-        } else {//小于15秒,游标处于0-mDuration
+        } else {
             mEndPosition = mDuration;
             mTimeVideo = mDuration;
         }
@@ -179,7 +172,6 @@ public class VideoTrimmerView extends FrameLayout {
         mRangeSeekBarView.initMaxWidth();
         mRangeSeekBarView.setStartEndTime(mStartPosition, mEndPosition);
 
-        /**记录两个游标对应屏幕的初始位置,这个两个值只会在视频长度可以滚动的时候有效*/
         leftThumbValue = 0;
         rightThumbValue = mDuration <= mMaxDuration ? TimeToPix(mDuration) : TimeToPix(mMaxDuration);
     }
@@ -418,10 +410,10 @@ public class VideoTrimmerView extends FrameLayout {
 
     private void onSaveClicked() {
         if (mEndPosition/1000 - mStartPosition/1000 < TrimVideoUtil.MIN_TIME_FRAME) {
-            Toast.makeText(mContext, "视频长不足5秒,无法上传", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, "Video Saved", Toast.LENGTH_SHORT).show();
         }else{
             mVideoView.pause();
-            TrimVideoUtil.trimVideo(mContext, mSrc.getPath(), getTrimmedVideoPath(), mStartPosition, mEndPosition, mOnTrimVideoListener);
+            TrimVideoUtil.trimVideo(mContext, mSrc.getEncodedPath(), getTrimmedVideoPath(), mStartPosition, mEndPosition, mOnTrimVideoListener);
         }
     }
 
@@ -447,18 +439,12 @@ public class VideoTrimmerView extends FrameLayout {
         setPlayPauseViewIcon(mVideoView.isPlaying());
     }
 
-    /**
-     * 屏幕长度转化成视频的长度
-     */
     private long PixToTime(float value) {
         if(pixelRangeMax == 0)
             return 0;
         return (long)((mDuration * value) / pixelRangeMax);
     }
 
-    /**
-     * 视频长度转化成屏幕的长度
-     */
     private long TimeToPix(long value) {
         return (pixelRangeMax * value) / mDuration;
     }
@@ -546,7 +532,7 @@ public class VideoTrimmerView extends FrameLayout {
                         if (mScrolledOffset <= 0)
                             mScrolledOffset = 0;
                     } else {
-                        if(PixToTime(mScrolledOffset + SCREEN_WIDTH) <= mDuration)//根据时间来判断还是否可以向左滚动
+                        if(PixToTime(mScrolledOffset + SCREEN_WIDTH) <= mDuration)
                             mScrolledOffset = mScrolledOffset + scrolledOffset;
                     }
                     onVideoReset();

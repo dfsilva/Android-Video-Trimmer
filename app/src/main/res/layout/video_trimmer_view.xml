@@ -35,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="30dp"
             android:gravity="center"
-            android:text="拖动选择你要发表的15秒以内片段"
+            android:text="Arraste para selecionar a seção que deseja publicar dentro de 15 segundos"
             android:textColor="#444444"
             android:textSize="12dp" />
 
@@ -84,7 +84,7 @@
                 android:layout_gravity="left"
                 android:gravity="center"
                 android:padding="10dp"
-                android:text="返回"
+                android:text="Cancel"
                 android:textColor="@android:color/black"
                 android:textSize="16dp" />
 
@@ -103,7 +103,7 @@
                 android:layout_gravity="right"
                 android:gravity="center"
                 android:padding="10dp"
-                android:text="完成"
+                android:text="Finish"
                 android:textColor="@android:color/black"
                 android:textSize="16dp" />
 

@@ -35,7 +35,7 @@
                 android:ellipsize="end"
                 android:gravity="center"
                 android:maxLines="1"
-                android:text="所有视频"
+                android:text="All Videos"
                 android:textColor="#666666"
                 android:textSize="18dp"
                 android:textStyle="bold"/>
@@ -83,7 +83,7 @@
             android:gravity="center"
             android:paddingLeft="15dp"
             android:paddingRight="15dp"
-            android:text="下一步"
+            android:text="Next Step"
             android:textSize="16dp"/>
     </LinearLayout>
 </layout>

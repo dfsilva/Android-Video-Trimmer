@@ -9,6 +9,8 @@ import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.coremedia.iso.boxes.Container;
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
@@ -26,6 +28,9 @@ import com.iknow.android.models.VideoInfo;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -43,32 +48,30 @@ import iknow.android.utils.thread.BackgroundExecutor;
 public class TrimVideoUtil {
 
     private static final String TAG = TrimVideoUtil.class.getSimpleName();
-    public static final int VIDEO_MAX_DURATION = 15;// 15秒
+
+    public static final int VIDEO_MAX_DURATION = 15;
     public static final int MIN_TIME_FRAME = 5;
     private static final int thumb_Width = (DeviceUtil.getDeviceWidth() - UnitConverter.dpToPx(20)) / VIDEO_MAX_DURATION;
     private static final int thumb_Height = UnitConverter.dpToPx(60);
     private static final long one_frame_time = 1000000;
 
-    public static void trimVideo(Context context, String inputFile, String outputFile, long startMs, long endMs, final OnTrimVideoListener callback) {
+    public static void trimVideo(final Context context, String inputFile, String outputFile, long startMs, long endMs, final OnTrimVideoListener callback) {
         final String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         final String outputName = "trimmedVideo_" + timeStamp + ".mp4";
 
         String start = convertSecondsToTime(startMs / 1000);
         String duration = convertSecondsToTime((endMs - startMs) / 1000);
 
-        /**ffmpeg -ss START -t DURATION -i INPUT -vcodec copy -acodec copy OUTPUT
-         -ss 开始时间，如： 00:00:20，表示从20秒开始；
-         -t 时长，如： 00:00:10，表示截取10秒长的视频；
-         -i 输入，后面是空格，紧跟着就是输入视频文件；
-         -vcodec copy 和 -acodec copy 表示所要使用的视频和音频的编码格式，这里指定为copy表示原样拷贝；
-         INPUT，输入视频文件；
-         OUTPUT，输出视频文件*/
+        inputFile = Uri.fromFile(new File(inputFile)).getEncodedPath();
+
         String cmd = "-ss " + start + " -t " + duration + " -i " + inputFile + " -vcodec copy -acodec copy " + outputFile + "/" + outputName;
         String[] command = cmd.split(" ");
+
         try {
             FFmpeg.getInstance(context).execute(command, new ExecuteBinaryResponseHandler() {
                 @Override
                 public void onFailure(String s) {
+                    Toast.makeText(context, "Error "+s, Toast.LENGTH_LONG).show();
                 }
 
                 @Override
@@ -86,7 +89,7 @@ public class TrimVideoUtil {
                 }
             });
         } catch (FFmpegCommandAlreadyRunningException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage(), e);
         }
     }
 
@@ -98,12 +101,11 @@ public class TrimVideoUtil {
                    try {
                        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
                        mediaMetadataRetriever.setDataSource(context, videoUri);
-                       // Retrieve media data use microsecond
+
                        long videoLengthInMs = Long.parseLong(mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)) * 1000;
                        long numThumbs = videoLengthInMs < one_frame_time ? 1 : (videoLengthInMs / one_frame_time);
                        final long interval = videoLengthInMs / numThumbs;
 
-                       //每次截取到3帧之后上报
                        for (long i = 0; i < numThumbs; ++i) {
                            Bitmap bitmap = mediaMetadataRetriever.getFrameAtTime(i * interval, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
                            try {
@@ -131,9 +133,6 @@ public class TrimVideoUtil {
 
     }
 
-    /**
-     * 需要设计成异步的
-     */
     public static ArrayList<VideoInfo> getAllVideoFiles(Context mContext) {
         VideoInfo video;
         ArrayList<VideoInfo> videos = new ArrayList<>();

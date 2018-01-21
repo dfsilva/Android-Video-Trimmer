@@ -1,5 +1,6 @@
 package com.iknow.android;
 
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -71,5 +72,10 @@ public class VideoSelectActivity extends AppCompatActivity implements View.OnCli
         } else if (v.getId() == binding.nextStep.getId()) {
             TrimmerActivity.go(VideoSelectActivity.this, videoPath);
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
