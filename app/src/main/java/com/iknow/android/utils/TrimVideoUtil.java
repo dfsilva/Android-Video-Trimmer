@@ -62,15 +62,30 @@ public class TrimVideoUtil {
         String start = convertSecondsToTime(startMs / 1000);
         String duration = convertSecondsToTime((endMs - startMs) / 1000);
 
+        MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+
+
         inputFile = Uri.fromFile(new File(inputFile)).getEncodedPath();
 
-        String cmd = "-ss " + start + " -t " + duration + " -i " + inputFile + " -vcodec copy -acodec copy " + outputFile + "/" + outputName;
+        metaRetriever.setDataSource(context, Uri.fromFile(new File(inputFile)));
+
+        String height = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
+        String width = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
+
+        int heightInt = Integer.parseInt(height);
+        int widthInt = Integer.parseInt(width);
+
+        String newRes = (Math.round(heightInt/3)) + "x" + (Math.round(widthInt/3));
+
+        String cmd = "-ss " + start + " -t " + duration + " -i " + inputFile + " -s "+newRes
+                +" -acodec mp2 -strict -2 -ac 1 -ar 16000 -r 13 -ab 32000 " + outputFile + "/" + outputName;
         String[] command = cmd.split(" ");
 
         try {
             FFmpeg.getInstance(context).execute(command, new ExecuteBinaryResponseHandler() {
                 @Override
                 public void onFailure(String s) {
+                    Log.e(TAG, s);
                     Toast.makeText(context, "Error "+s, Toast.LENGTH_LONG).show();
                 }
 
